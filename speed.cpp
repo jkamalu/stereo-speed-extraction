@@ -1,6 +1,6 @@
 #include "speed.h"
 
-
+// Function to calulate the speed of an object out of 4 images
 
 using namespace std;
 using namespace cv;
