@@ -1,12 +1,13 @@
 #include <iostream>
 #include <fstream>
-#include <dirent.h>
+#include <cmath>
 #include "speed_test.h"
 
 using namespace std;
 
-SpeedTest::SpeedTest(std::string path) {
+SpeedTest::SpeedTest(string path, float speed) {
     this->path = path;
+    this->speed = speed;
     string dataPath = path + "/data.csv";
     ifstream dataFile(dataPath);
     if (dataFile.is_open()) {
@@ -55,9 +56,11 @@ float SpeedTest::getSpeed(string left0, string left1, string right0, string righ
     // accepts: filenames
     // returns: euclidean distance
     float euclidean = 1.0;
-    return euclidean / dt;
+    return euclidean / (dt / 1000.0);
 }
 
+// map: configuration -> vector of speeds
+// e.g. map["vertical"] -> [2.9, 3, 3.1] where each elem in vector is speed between t and t+1
 void SpeedTest::calculateSpeeds() {
     for (const auto &pair : this->timesteps) {
         vector<tuple<int, Position, Rotation> >::iterator curr = this->timesteps[pair.first].begin();
@@ -84,8 +87,23 @@ void SpeedTest::calculateSpeeds() {
     }
 }
 
+void SpeedTest::speedStats() {
+    for (const auto &pair : this->speeds) {
+        float avg_error = 0;
+        float avg_speed = 0;
+        for (float speed : this->speeds[pair.first]) {
+            avg_error += abs(speed - this->speed);
+            avg_speed += speed;
+        }
+        avg_error /= this->speeds.size();
+        avg_speed /= this->speeds.size();
+        cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl;
+    }
+}
+
 int main (int argc, char *argv[]) {
-    SpeedTest speedTest(argv[1]);
+    SpeedTest speedTest(argv[1], 3);
     speedTest.calculateSpeeds();
+    speedTest.speedStats();
     return 0;
 }

@@ -10,6 +10,7 @@ class SpeedTest {
     private:
         // class variables
         string path;
+        float speed;
 
         // typedefs
         struct Position {
@@ -30,7 +31,7 @@ class SpeedTest {
     public:
 
         // constructors
-        SpeedTest(string path);
+        SpeedTest(string path, float speed);
 
         // class variables
         Timesteps timesteps;
@@ -39,5 +40,6 @@ class SpeedTest {
         // functions
         vector<string> vectorize(string line);
         void calculateSpeeds();
+        void speedStats();
 
 };
