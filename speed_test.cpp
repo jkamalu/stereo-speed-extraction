@@ -62,7 +62,7 @@ void SpeedTest::calculateSpeeds() {
         vector<tuple<int, Position, Rotation> >::iterator curr = this->timesteps[pair.first].begin();
         vector<tuple<int, Position, Rotation> >::iterator next = this->timesteps[pair.first].begin();
         ++next;
-        while (curr != this->timesteps[pair.first].end()) {
+        while (next != this->timesteps[pair.first].end()) {
             int t1 = std::get<0>(*curr);
             int t2 = std::get<0>(*next);
 
