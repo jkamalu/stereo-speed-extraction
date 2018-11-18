@@ -6,6 +6,7 @@
 using namespace std;
 
 SpeedTest::SpeedTest(std::string path) {
+    this->path = path;
     string dataPath = path + "/data.csv";
     ifstream dataFile(dataPath);
     if (dataFile.is_open()) {
