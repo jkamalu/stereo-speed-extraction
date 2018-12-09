@@ -43,7 +43,7 @@ Vec3d difference_cat(Mat matrix1, Mat matrix2)
 }
 void matcher(Mat desc1, Mat desc2, vector<Point2f>& kp1, vector<Point2f>& kp2, Image<uchar> I1, Image<uchar> I2, vector<KeyPoint> m1, vector<KeyPoint> m2, String name)
 {
-	BFMatcher M = BFMatcher::BFMatcher(NORM_HAMMING, true);
+	BFMatcher M = BFMatcher(NORM_HAMMING, true);
 
 	vector<DMatch> matches_stereo;
 	cout << "Size desc1 : "<<desc1.size[0]<< endl;

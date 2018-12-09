@@ -107,8 +107,7 @@ void SpeedTest::speedStats() {
 }
 
 int main (int argc, char *argv[]) {
-	
-	SpeedTest speedTest(argv[1], 3);
+    SpeedTest speedTest(argv[1], 3);
     speedTest.calculateSpeeds();
     speedTest.speedStats();
     return 0;
