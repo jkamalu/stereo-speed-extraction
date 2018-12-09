@@ -46,26 +46,37 @@ void matcher(Mat desc1, Mat desc2, vector<Point2f>& kp1, vector<Point2f>& kp2, I
 	BFMatcher M = BFMatcher::BFMatcher(NORM_HAMMING, true);
 
 	vector<DMatch> matches_stereo;
-	M.match(desc1, desc2, matches_stereo);
-	Mat img_matches;
-	
-	drawMatches(I1, m1, I2, m2, matches_stereo, img_matches);
-	
-	imshow(name , img_matches);
-
-	double distance_threshold = 100;
-	double ransacReprojThreshold = 3;
-	// Order the matching points 
-	for (int i = 0; i < matches_stereo.size(); i++)
+	cout << "Size desc1 : "<<desc1.size[0]<< endl;
+	cout << "Size desc2 : " << desc2.size[1] << endl;
+	if (desc1.size[0] == 0 || desc2.size[0] == 0)
 	{
-		if (matches_stereo[i].distance < distance_threshold)
-		{
-						
-			kp1.push_back(m1[matches_stereo[i].queryIdx].pt);
-			kp2.push_back(m2[matches_stereo[i].trainIdx].pt);
-		}
-
+		cout << "Error" << endl;
 	}
+	else
+	{
+		M.match(desc1, desc2, matches_stereo);
+		Mat img_matches;
+
+		drawMatches(I1, m1, I2, m2, matches_stereo, img_matches);
+		//imshow(name , img_matches);
+
+		double distance_threshold = 100;
+		double ransacReprojThreshold = 3;
+		// Order the matching points 
+		for (int i = 0; i < matches_stereo.size(); i++)
+		{
+			if (matches_stereo[i].distance < distance_threshold)
+			{
+
+				kp1.push_back(m1[matches_stereo[i].queryIdx].pt);
+				kp2.push_back(m2[matches_stereo[i].trainIdx].pt);
+			}
+
+		}
+	}
+	
+	
+	
 
 }
 list<position_data> positions; // Is this good or bad to return a list ??? --> would it be better if list is given as Reference ?  
@@ -83,26 +94,24 @@ list<position_data> position_calculating(String I1_l_s, String I1_r_s, String I2
 	cout << "Mat Cam0 " << cam_right << endl;
 	cout << "Mat Cam1 " << cam_left << endl;
 	//Detect Keypoints with AKAZE
-	Ptr<AKAZE> D = AKAZE::create(AKAZE::DESCRIPTOR_MLDB, //descriptor_type =
+	/*Ptr<AKAZE> D = AKAZE::create(AKAZE::DESCRIPTOR_MLDB, //descriptor_type =
 		0, //int 	descriptor_size
 		3, //int 	descriptor_channels 
 		0.01f, //float 	threshold
 		11, //int 	nOctaves
 		11, //int 	nOctaveLayers
 		KAZE::DIFF_PM_G2 //int diffusivity 
-	);
-
+	);*/
+	Ptr<AKAZE> D = AKAZE::create(AKAZE::DESCRIPTOR_MLDB);
 	
 	vector<KeyPoint> m1_l, m1_r, m2_l, m2_r; //Key points
 	vector<Point2f> kp1_l, kp1_r, kp2_l, kp2_r, kp12_l, kp12_l2, kp12_r, kp12_r2; //Vectors for the matched key points --> at each position x in kp1(x) and kp2(x) are the coordinates of the matched Keypoints  
 	Mat desc1_l, desc1_r, desc2_l, desc2_r;
 	// Detect the keypoints for the different images
-	
 	D->detectAndCompute(I1_l, noArray(), m1_l, desc1_l);
 	D->detectAndCompute(I1_r, noArray(), m1_r, desc1_r);
 	D->detectAndCompute(I2_l, noArray(), m2_l, desc2_l);
 	D->detectAndCompute(I2_r, noArray(), m2_r, desc2_r);
-
 	// Match the different keypoints
 	matcher(desc1_l, desc1_r, kp1_l, kp1_r, I1_l, I1_r, m1_l, m1_r, "First");
 	matcher(desc2_l, desc2_r, kp2_l, kp2_r, I2_l, I2_r, m2_l, m2_r, "Second");
@@ -110,9 +119,7 @@ list<position_data> position_calculating(String I1_l_s, String I1_r_s, String I2
 	matcher(desc1_r, desc2_r, kp12_r, kp12_r2, I1_r, I2_r, m1_r, m2_r, "Right Match");
 	int N = kp1_l.size();
 	int N2 = kp2_l.size();
-
 	list<position_data> position_data_list;
-	
 	RNG rng(3403);
 	int counter = 0; 
 	//Going through all keypoints finding the one that can be found in all 
@@ -143,10 +150,10 @@ list<position_data> position_calculating(String I1_l_s, String I1_r_s, String I2
 						difference = difference_cat(pnts3D, pnts3D_2);
 						//cout << difference << endl;
 						
-						//Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
-						Scalar color[2] = { Scalar(187, 255, 0), Scalar(80, 0, 225) };
-						circle(I1_l, kp1_l[j], 15, color[counter],2);
-						circle(I2_l, kp2_l[k], 15, color[counter],2);
+						Scalar color = Scalar(rng.uniform(0, 255), rng.uniform(0, 255), rng.uniform(0, 255));
+						//Scalar color[2] = { Scalar(187, 255, 0), Scalar(80, 0, 225) };
+						circle(I1_l, kp1_l[j], 15, color,2);
+						circle(I2_l, kp2_l[k], 15, color,2);
 						counter++; 
 						position_data one_position = {kp1_l, kp1_r, kp2_l,kp2_l, pnts3D, pnts3D_2, difference};
 						position_data_list.push_back(one_position);
@@ -157,6 +164,7 @@ list<position_data> position_calculating(String I1_l_s, String I1_r_s, String I2
 			}
 		}
 	}
+	cout << "" << endl;
 	//Show the results  
 	imshow("Circel 1 ", I1_l);
 	imshow("Circel 2 ", I2_l);

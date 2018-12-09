@@ -2,6 +2,7 @@
 #include <fstream>
 #include <cmath>
 #include "speed_test.h"
+#include "speed.h"
 
 using namespace std;
 
@@ -55,7 +56,8 @@ float SpeedTest::getSpeed(string left0, string left1, string right0, string righ
     // call to Bjoern's function
     // accepts: filenames
     // returns: euclidean distance
-    float euclidean = 1.0;
+	
+    float euclidean = mean_speed(left0, right0, left1, right1);
     return euclidean / (dt / 1000.0);
 }
 
@@ -98,14 +100,15 @@ void SpeedTest::speedStats() {
         avg_error /= this->speeds.size();
         avg_speed /= this->speeds.size();
 
-        string error = statsSize == 0 ? "undefined" : to_string(avg_error / statsSize);
+        //string error = statsSize == 0 ? "undefined" : to_string(avg_error / statsSize);
 
         cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl;
     }
 }
 
 int main (int argc, char *argv[]) {
-    SpeedTest speedTest(argv[1], 3);
+	
+	SpeedTest speedTest(argv[1], 3);
     speedTest.calculateSpeeds();
     speedTest.speedStats();
     return 0;
