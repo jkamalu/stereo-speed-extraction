@@ -97,6 +97,9 @@ void SpeedTest::speedStats() {
         }
         avg_error /= this->speeds.size();
         avg_speed /= this->speeds.size();
+
+        string error = statsSize == 0 ? "undefined" : to_string(avg_error / statsSize);
+
         cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl;
     }
 }
