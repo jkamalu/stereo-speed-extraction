@@ -53,12 +53,7 @@ std::vector<std::string> SpeedTest::vectorize(string line) {
 }
 
 float SpeedTest::getSpeed(string left0, string left1, string right0, string right1, int dt) {
-    // call to Bjoern's function
-    // accepts: filenames
-    // returns: euclidean distance
-	
-    float euclidean = mean_speed(left0, right0, left1, right1);
-    return euclidean / (dt / 1000.0);
+    return this->speedExtractor.estimateSpeed(left0, right0, left1, right1, dt);
 }
 
 // map: configuration -> vector of speeds
@@ -93,20 +88,25 @@ void SpeedTest::speedStats() {
     for (const auto &pair : this->speeds) {
         float avg_error = 0;
         float avg_speed = 0;
+        int missingSpeeds = 0;
         for (float speed : this->speeds[pair.first]) {
+            if (speed < 0) {
+                missingSpeeds++;
+                continue;
+            }
             avg_error += abs(speed - this->speed);
             avg_speed += speed;
         }
         avg_error /= this->speeds.size();
         avg_speed /= this->speeds.size();
 
-        //string error = statsSize == 0 ? "undefined" : to_string(avg_error / statsSize);
-
-        cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl;
+        cout << "No speed found for " << missingSpeeds << " timesteps in " << pair.first << endl;
+        cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl << endl;
     }
 }
 
 int main (int argc, char *argv[]) {
+    cout << argv[1] << endl;
     SpeedTest speedTest(argv[1], 3);
     speedTest.calculateSpeeds();
     speedTest.speedStats();
