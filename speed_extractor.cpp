@@ -16,51 +16,28 @@ float SpeedExtractor::estimateSpeed(string l0, string r0, string l1, string r1, 
     SpeedExtractor::ImageQuad imageQuad = this->loadImages(l0, r0, l1, r1);
     return this->estimateSpeed(imageQuad, timeDelta);
 }
-float SpeedExtractor::filter_speed(vector<float> euclideanNorms)
-{
-	double speed;
-	bool median = true;
 
-	if (median) {
-		sort(euclideanNorms.begin(), euclideanNorms.end());
-		if (euclideanNorms.empty()) {
-			speed = -1;
-		}
-		else if (euclideanNorms.size() % 2 == 0) {
-			speed = euclideanNorms[euclideanNorms.size() / 2];
-		}
-		else {
-			speed = euclideanNorms[(euclideanNorms.size() - 1) / 2];
-		}
-	}
-	else {
-		speed = mean(euclideanNorms)[0];
-	}
-	cout << "Speed" << speed << endl;
-	int position = 0; 
+float SpeedExtractor::filterSpeeds(vector<float> speeds) {
+    
+	int position = 0;
 	float min_aggregated_difference = 0; 
 	float best_value = 0; 
 	float aggregated_difference;
 
-	for (auto difference_index : euclideanNorms) {
-		cout << "Value: " << difference_index << endl; 
-		aggregated_difference = 0; 
+	for (auto difference_index : speeds) {
+		aggregated_difference = 0;
 		int inner_position = 0; 
-		for (auto difference_values : euclideanNorms) {
+		for (auto difference_values : speeds) {
 			aggregated_difference = aggregated_difference + (difference_index - difference_values) * (difference_index - difference_values); 
 			inner_position++;
 		}
-		//cout << "Aggregated Difference" << aggregated_difference << endl;
 		if (aggregated_difference < min_aggregated_difference || position == 0)
 		{
 			min_aggregated_difference = aggregated_difference; 
-			best_value = difference_index; 
-			//cout << "Min Value founded" << best_value << endl; 
+			best_value = difference_index;
 		}
 		position++; 
 	}
-
-	//cout << "Min difference value" << best_value <<endl;
 
 
 	int position_ra = 0;
@@ -68,33 +45,27 @@ float SpeedExtractor::filter_speed(vector<float> euclideanNorms)
 	float best_value_ra = 0;
 	int aggregated_inliers;
 
-	for (auto difference_index : euclideanNorms) {
+	for (auto difference_index : speeds) {
 		float under_border =  difference_index - 0.15;
 		float upper_boarder = difference_index +0.15;
 		aggregated_inliers = 0;
-		int inner_position = 0;
-		for (auto difference_values : euclideanNorms) {
+		for (auto difference_values : speeds) {
 			if (under_border <= difference_values && difference_values <= upper_boarder)
 			{
 				aggregated_inliers++;
 			}
 		}
-		//cout << "Aggregated Difference" << aggregated_inliers << endl;
-		if (aggregated_inliers > max_inliers || position_ra == 0 && difference_index > 0.4)
+		if (aggregated_inliers > max_inliers || (position_ra == 0 && difference_index > 0.4))
 		{
 			max_inliers = aggregated_inliers;
 			best_value_ra = difference_index;
-			cout << "Min Value founded" << best_value_ra << endl;
 		}
 		position_ra++;
 	}
 
-	cout << "Min difference value" << best_value_ra << endl;
-
-	return speed;
-
-
+	return best_value_ra;
 }
+
 float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int timeDelta) {
     // Key points
     vector<KeyPoint> keyPointsL0, keyPointsR0, keyPointsL1, keyPointsR1;
@@ -117,7 +88,7 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
     vector<pair<SpeedExtractor::MatchFilterPair, SpeedExtractor::MatchFilterPair> > filteredMatches;
     this->filterMatches(matchesL, matchesR, matches0, matches1, filteredMatches);
     
-    vector<float> euclideanNorms; //Why int 
+    vector<float> euclideanNorms;
     
     for (auto filteredMatch : filteredMatches) {
         Mat pointL0(filteredMatch.first.queryPoint);
@@ -133,7 +104,17 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
         Point3f difference = this->differenceCartesian(point0, point1);
         euclideanNorms.push_back(norm(difference));
     }
-	return this->filter_speed(euclideanNorms);
+    
+    vector<float> speeds;
+    if (euclideanNorms.empty()) {
+        return -1;
+    } else {
+        for (const auto& norm : euclideanNorms) {
+            speeds.push_back(norm / timeDelta);
+        }
+    }
+    
+    return this->filterSpeeds(speeds);
     }
 
 Point3f SpeedExtractor::differenceCartesian(Mat& point0, Mat& point1) {
@@ -152,17 +133,6 @@ Point3f SpeedExtractor::differenceCartesian(Mat& point0, Mat& point1) {
     difference.z = point0.at<float>(2, 0) - point1.at<float>(2, 0);
     
     return difference;
-}
-
-void SpeedExtractor::normalizeHomogeneous(Mat& matrix) {
-    /* Normalises the last value of the vector to 1 */
-    if (matrix.at<float>(3, 0) != 0)
-    {
-        matrix.at<float>(0, 0) = matrix.at<float>(0, 0) / matrix.at<float>(3, 0);
-        matrix.at<float>(1, 0) = matrix.at<float>(1, 0) / matrix.at<float>(3, 0);
-        matrix.at<float>(2, 0) = matrix.at<float>(2,0) / matrix.at<float>(3,0);
-        matrix.at<float>(3, 0) = 1.0;
-    }
 }
 
 void SpeedExtractor::filterMatches(vector<SpeedExtractor::MatchFilterPair>& matchesL,
@@ -198,26 +168,32 @@ void SpeedExtractor::findDumbMatches(Image<uchar>& imageA, Image<uchar>& imageB,
                                      vector<KeyPoint> keyPointsA, vector<KeyPoint> keyPointsB,
                                      vector<SpeedExtractor::MatchFilterPair>& matches,
                                      string name) {
-    vector<DMatch> stereoMatches;
     
     assert(descA.size[0] != 0 && descB.size[0] != 0);
     
-    this->matcher.match(descA, descB, stereoMatches);
+    vector<vector<DMatch> > knnMatches;
+    this->matcher.knnMatch(descA, descB, knnMatches, 2);
     
-    Mat imageMatches;
-    drawMatches(imageA, keyPointsA, imageB, keyPointsB, stereoMatches, imageMatches);
-    // imshow(name, imageMatches);
-    
-    double distanceThreshold = 100;
-    for (auto match : stereoMatches) {
-        if (match.distance < distanceThreshold) {
+    vector<DMatch> stereoMatches;
+    vector<Point> matchPoints1, matchPoints2;
+    for (vector<DMatch> knnMatch : knnMatches) {
+        // distances cannot be too close
+        if (knnMatch[0].distance < .8 * knnMatch[1].distance ) {
+            DMatch& bestMatch = knnMatch[0];
             SpeedExtractor::MatchFilterPair matchFilterPair = {
-                match.queryIdx,
-                match.trainIdx,
-                keyPointsA[match.queryIdx].pt,
-                keyPointsB[match.trainIdx].pt
+                bestMatch.queryIdx,
+                bestMatch.trainIdx,
+                keyPointsA[bestMatch.queryIdx].pt,
+                keyPointsB[bestMatch.trainIdx].pt
             };
             matches.push_back(matchFilterPair);
+            stereoMatches.push_back(bestMatch);
         }
     }
+    
+//    Mat imageMatches;
+//    drawMatches(imageA, keyPointsA, imageB, keyPointsB, stereoMatches, imageMatches);
+//    imshow(name, imageMatches);
+//    waitKey();
+    
 }

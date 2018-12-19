@@ -52,7 +52,7 @@ std::vector<std::string> SpeedTest::vectorize(string line) {
     return values;
 }
 
-float SpeedTest::getSpeed(string left0, string left1, string right0, string right1, int dt) {
+float SpeedTest::getSpeed(string left0, string right0, string left1, string right1, int dt) {
     return this->speedExtractor.estimateSpeed(left0, right0, left1, right1, dt);
 }
 

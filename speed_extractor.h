@@ -38,7 +38,7 @@ private:
     
     Ptr<AKAZE> descriptor = AKAZE::create(AKAZE::DESCRIPTOR_MLDB);
     
-    BFMatcher matcher = BFMatcher(NORM_HAMMING, true);
+    BFMatcher matcher = BFMatcher(NORM_HAMMING, false);
     
     // functions
     ImageQuad loadImages(string l0, string r0, string l1, string r1);
@@ -61,7 +61,16 @@ private:
         }
     };
     
-    void normalizeHomogeneous(Mat& matrix);
+    inline void normalizeHomogeneous(Mat& matrix) {
+        /* Normalises the last value of the vector to 1 */
+        if (matrix.at<float>(3, 0) != 0)
+        {
+            matrix.at<float>(0, 0) = matrix.at<float>(0, 0) / matrix.at<float>(3, 0);
+            matrix.at<float>(1, 0) = matrix.at<float>(1, 0) / matrix.at<float>(3, 0);
+            matrix.at<float>(2, 0) = matrix.at<float>(2,0) / matrix.at<float>(3,0);
+            matrix.at<float>(3, 0) = 1.0;
+        }
+    }
     
     Point3f differenceCartesian(Mat& m1, Mat& m2);
     
@@ -71,7 +80,7 @@ public:
     float estimateSpeed(ImageQuad& imageQuad, int timeDelta);
     
     float estimateSpeed(string l0, string r0, string l1, string r1, int timeDelta);
-	float SpeedExtractor::filter_speed(vector<float> euclideanNorms);
+	float filterSpeeds(vector<float> euclideanNorms);
 
     
 };
