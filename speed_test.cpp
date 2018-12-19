@@ -90,18 +90,18 @@ void SpeedTest::speedStats() {
         float avg_speed = 0;
         int missingSpeeds = 0;
         for (float speed : this->speeds[pair.first]) {
-            if (speed < 0) {
+            if (speed == -1) {
                 missingSpeeds++;
                 continue;
             }
             avg_error += abs(speed - this->speed);
             avg_speed += speed;
         }
-        avg_error /= this->speeds.size();
-        avg_speed /= this->speeds.size();
+        avg_error /= this->speeds[pair.first].size();
+        avg_speed /= this->speeds[pair.first].size();
 
-        cout << "No speed found for " << missingSpeeds << " timesteps in " << pair.first << endl;
-        cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl << endl;
+        cout << missingSpeeds << " timesteps missing speed." << endl;
+        cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl;
     }
 }
 

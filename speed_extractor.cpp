@@ -110,12 +110,14 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
         return -1;
     } else {
         for (const auto& norm : euclideanNorms) {
-            speeds.push_back(norm / timeDelta);
+            speeds.push_back((norm / timeDelta) * 1000);
         }
     }
-    
-    return this->filterSpeeds(speeds);
-    }
+    float meanSpeed = mean(speeds)[0];
+    float filteredSpeed = this->filterSpeeds(speeds);
+
+    return filteredSpeed;
+}
 
 Point3f SpeedExtractor::differenceCartesian(Mat& point0, Mat& point1) {
     /*
@@ -153,7 +155,7 @@ void SpeedExtractor::filterMatches(vector<SpeedExtractor::MatchFilterPair>& matc
             int indexR0 = matches0[query0[indexL0]].trainIndex;
             int indexR1 = matchesR[queryR[indexR0]].trainIndex;
             int indexL1 = matches1[query1[indexR1]].queryIndex;
-            if (indexL1 == matchL.trainIndex) {
+            if (indexL1 != matchL.trainIndex) {
                 continue;
             }
             pair<SpeedExtractor::MatchFilterPair, SpeedExtractor::MatchFilterPair> match(matchL, matchesR[queryR[indexR1]]);
@@ -172,13 +174,13 @@ void SpeedExtractor::findDumbMatches(Image<uchar>& imageA, Image<uchar>& imageB,
     assert(descA.size[0] != 0 && descB.size[0] != 0);
     
     vector<vector<DMatch> > knnMatches;
-    this->matcher.knnMatch(descA, descB, knnMatches, 2);
+    this->matcher.knnMatch(descA, descB, knnMatches, 3);
     
     vector<DMatch> stereoMatches;
     vector<Point> matchPoints1, matchPoints2;
     for (vector<DMatch> knnMatch : knnMatches) {
         // distances cannot be too close
-        if (knnMatch[0].distance < .8 * knnMatch[1].distance ) {
+        if (knnMatch[0].distance < .8 * knnMatch[1].distance) {
             DMatch& bestMatch = knnMatch[0];
             SpeedExtractor::MatchFilterPair matchFilterPair = {
                 bestMatch.queryIdx,
@@ -195,5 +197,5 @@ void SpeedExtractor::findDumbMatches(Image<uchar>& imageA, Image<uchar>& imageB,
 //    drawMatches(imageA, keyPointsA, imageB, keyPointsB, stereoMatches, imageMatches);
 //    imshow(name, imageMatches);
 //    waitKey();
-    
+//    
 }
