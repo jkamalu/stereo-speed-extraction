@@ -75,16 +75,20 @@ private:
     
     Point3f differenceCartesian(Mat& m1, Mat& m2);
     
+    float filterSpeeds(vector<float> euclideanNorms);
+    
 public:
     
     // functions
     float estimateSpeed(ImageQuad& imageQuad, int timeDelta);
     
     float estimateSpeed(string l0, string r0, string l1, string r1, int timeDelta);
+
 	ImageQuad BackgroundSubtraction(Image<uchar> L0, Image<uchar>R0, Image<uchar>L1, Image<uchar>R1);
 	Mat BackgroundSubtraction_image(Image<uchar> image1, Image<uchar>image2);
 
 	float filterSpeeds(vector<float> euclideanNorms);
+
 
     
 };
