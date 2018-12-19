@@ -71,6 +71,8 @@ public:
     float estimateSpeed(ImageQuad& imageQuad, int timeDelta);
     
     float estimateSpeed(string l0, string r0, string l1, string r1, int timeDelta);
+	float SpeedExtractor::filter_speed(vector<float> euclideanNorms);
+
     
 };
 
