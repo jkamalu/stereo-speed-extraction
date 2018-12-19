@@ -7,6 +7,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
+#include <opencv2/video.hpp>
 #include "image.h"
 
 using namespace std;
@@ -82,6 +83,13 @@ public:
     float estimateSpeed(ImageQuad& imageQuad, int timeDelta);
     
     float estimateSpeed(string l0, string r0, string l1, string r1, int timeDelta);
+
+	ImageQuad BackgroundSubtraction(Image<uchar> L0, Image<uchar>R0, Image<uchar>L1, Image<uchar>R1);
+	Mat BackgroundSubtraction_image(Image<uchar> image1, Image<uchar>image2);
+
+	float filterSpeeds(vector<float> euclideanNorms);
+
+
     
 };
 
