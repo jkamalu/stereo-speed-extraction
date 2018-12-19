@@ -110,5 +110,6 @@ int main (int argc, char *argv[]) {
     SpeedTest speedTest(argv[1], 3);
     speedTest.calculateSpeeds();
     speedTest.speedStats();
+	waitKey();
     return 0;
 }
