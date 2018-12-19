@@ -16,7 +16,85 @@ float SpeedExtractor::estimateSpeed(string l0, string r0, string l1, string r1, 
     SpeedExtractor::ImageQuad imageQuad = this->loadImages(l0, r0, l1, r1);
     return this->estimateSpeed(imageQuad, timeDelta);
 }
+float SpeedExtractor::filter_speed(vector<float> euclideanNorms)
+{
+	double speed;
+	bool median = true;
 
+	if (median) {
+		sort(euclideanNorms.begin(), euclideanNorms.end());
+		if (euclideanNorms.empty()) {
+			speed = -1;
+		}
+		else if (euclideanNorms.size() % 2 == 0) {
+			speed = euclideanNorms[euclideanNorms.size() / 2];
+		}
+		else {
+			speed = euclideanNorms[(euclideanNorms.size() - 1) / 2];
+		}
+	}
+	else {
+		speed = mean(euclideanNorms)[0];
+	}
+	cout << "Speed" << speed << endl;
+	int position = 0; 
+	float min_aggregated_difference = 0; 
+	float best_value = 0; 
+	float aggregated_difference;
+
+	for (auto difference_index : euclideanNorms) {
+		cout << "Value: " << difference_index << endl; 
+		aggregated_difference = 0; 
+		int inner_position = 0; 
+		for (auto difference_values : euclideanNorms) {
+			aggregated_difference = aggregated_difference + (difference_index - difference_values) * (difference_index - difference_values); 
+			inner_position++;
+		}
+		//cout << "Aggregated Difference" << aggregated_difference << endl;
+		if (aggregated_difference < min_aggregated_difference || position == 0)
+		{
+			min_aggregated_difference = aggregated_difference; 
+			best_value = difference_index; 
+			//cout << "Min Value founded" << best_value << endl; 
+		}
+		position++; 
+	}
+
+	//cout << "Min difference value" << best_value <<endl;
+
+
+	int position_ra = 0;
+	int max_inliers = 0;
+	float best_value_ra = 0;
+	int aggregated_inliers;
+
+	for (auto difference_index : euclideanNorms) {
+		float under_border =  difference_index - 0.15;
+		float upper_boarder = difference_index +0.15;
+		aggregated_inliers = 0;
+		int inner_position = 0;
+		for (auto difference_values : euclideanNorms) {
+			if (under_border <= difference_values && difference_values <= upper_boarder)
+			{
+				aggregated_inliers++;
+			}
+		}
+		//cout << "Aggregated Difference" << aggregated_inliers << endl;
+		if (aggregated_inliers > max_inliers || position_ra == 0 && difference_index > 0.4)
+		{
+			max_inliers = aggregated_inliers;
+			best_value_ra = difference_index;
+			cout << "Min Value founded" << best_value_ra << endl;
+		}
+		position_ra++;
+	}
+
+	cout << "Min difference value" << best_value_ra << endl;
+
+	return speed;
+
+
+}
 float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int timeDelta) {
     // Key points
     vector<KeyPoint> keyPointsL0, keyPointsR0, keyPointsL1, keyPointsR1;
@@ -39,7 +117,7 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
     vector<pair<SpeedExtractor::MatchFilterPair, SpeedExtractor::MatchFilterPair> > filteredMatches;
     this->filterMatches(matchesL, matchesR, matches0, matches1, filteredMatches);
     
-    vector<int> euclideanNorms;
+    vector<float> euclideanNorms; //Why int 
     
     for (auto filteredMatch : filteredMatches) {
         Mat pointL0(filteredMatch.first.queryPoint);
@@ -55,26 +133,8 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
         Point3f difference = this->differenceCartesian(point0, point1);
         euclideanNorms.push_back(norm(difference));
     }
-    
-    double speed;
-    
-    bool median = true;
-    
-    if (median) {
-        sort(euclideanNorms.begin(), euclideanNorms.end());
-        if (euclideanNorms.empty()) {
-            speed = -1;
-        } else if (euclideanNorms.size() % 2 == 0) {
-            speed = euclideanNorms[euclideanNorms.size() / 2];
-        } else {
-            speed = euclideanNorms[(euclideanNorms.size() - 1) / 2];
-        }
-    } else {
-        speed = mean(euclideanNorms)[0];
+	return this->filter_speed(euclideanNorms);
     }
-
-    return speed;
-}
 
 Point3f SpeedExtractor::differenceCartesian(Mat& point0, Mat& point1) {
     /*
