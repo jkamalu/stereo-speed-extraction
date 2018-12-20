@@ -4,6 +4,7 @@
 #include <map>
 #include <stdio.h>
 #include <iostream>
+#include <random>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
@@ -74,7 +75,7 @@ private:
     
     Point3f differenceCartesian(Mat& m1, Mat& m2);
     
-    float filterSpeeds(vector<float> euclideanNorms);
+    vector<float> filterSpeeds(vector<float> euclideanNorms, float epsilon, float threshold);
     
 public:
     
@@ -82,6 +83,17 @@ public:
     float estimateSpeed(ImageQuad& imageQuad, int timeDelta);
     
     float estimateSpeed(string l0, string r0, string l1, string r1, int timeDelta);
+    
+    static inline float median(vector<float>& vals) {
+        float median;
+        sort(vals.begin(), vals.end());
+        if (vals.size() % 2 == 0 && vals.size() > 0) {
+            median = vals[vals.size() / 2];
+        } else {
+            median = vals[(vals.size() - 1) / 2];
+        }
+        return median;
+    }
     
 };
 
