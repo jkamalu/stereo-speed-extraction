@@ -97,11 +97,15 @@ void SpeedTest::speedStats() {
             avg_error += abs(speed - this->speed);
             avg_speed += speed;
         }
-        avg_error /= this->speeds[pair.first].size();
-        avg_speed /= this->speeds[pair.first].size();
+        avg_error /= this->speeds[pair.first].size() - missingSpeeds;
+        avg_speed /= this->speeds[pair.first].size() - missingSpeeds;
 
         cout << missingSpeeds << " timesteps missing speed." << endl;
-        cout << pair.first << ":\t" << "abs_error = " << avg_error << ", avg_speed = " << avg_speed << endl;
+        cout << pair.first << ":" << endl;
+        cout << "mean_abs_error = " << avg_error << endl;
+        cout << "mean_speed = " << avg_speed << endl;
+        cout << "median speed = " << SpeedExtractor::median(this->speeds[pair.first]) << endl;
+        cout << endl;
     }
 }
 
