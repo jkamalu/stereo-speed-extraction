@@ -86,25 +86,23 @@ void SpeedTest::calculateSpeeds() {
 
 void SpeedTest::speedStats() {
     for (const auto &pair : this->speeds) {
-        float avg_error = 0;
-        float avg_speed = 0;
+        vector<float> absoluteDifferences;
         int missingSpeeds = 0;
         for (float speed : this->speeds[pair.first]) {
             if (speed == -1) {
                 missingSpeeds++;
                 continue;
             }
-            avg_error += abs(speed - this->speed);
-            avg_speed += speed;
+            absoluteDifferences.push_back(abs(speed - this->speed));
         }
-        avg_error /= this->speeds[pair.first].size() - missingSpeeds;
-        avg_speed /= this->speeds[pair.first].size() - missingSpeeds;
-
+        
         cout << missingSpeeds << " timesteps missing speed." << endl;
         cout << pair.first << ":" << endl;
-        cout << "mean_abs_error = " << avg_error << endl;
-        cout << "mean_speed = " << avg_speed << endl;
-        cout << "median speed = " << SpeedExtractor::median(this->speeds[pair.first]) << endl;
+        cout << "Mean = " << mean(this->speeds[pair.first])[0] << endl;
+        cout << "Median = " << SpeedExtractor::median(this->speeds[pair.first]) << endl;
+        cout << "MeanAE = " << mean(absoluteDifferences)[0] << endl;
+        cout << "MedianAE = " << SpeedExtractor::median(absoluteDifferences) << endl;
+        cout << "MAD = " << SpeedExtractor::median(SpeedExtractor::medianAbsoluteDeviations(this->speeds[pair.first], 0.001)) << endl;
         cout << endl;
     }
 }

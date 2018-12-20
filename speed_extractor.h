@@ -35,11 +35,8 @@ private:
     
     // class variables
     Mat cameraRight = (Mat_<double>(3, 4) << 1.0, 0, 0, 0.5, 0, 1.0, 0, -1.0, 0, 0, -1, -0.5);
-    
     Mat cameraLeft = (Mat_<double>(3, 4) << 1.0, 0, 0, -0.5, 0, 1.0, 0, -1.0, 0, 0, -1, -0.5);
-    
     Ptr<AKAZE> descriptor = AKAZE::create(AKAZE::DESCRIPTOR_MLDB);
-    
     BFMatcher matcher = BFMatcher(NORM_HAMMING, false);
     
     // functions
@@ -64,19 +61,14 @@ private:
     };
     
     inline void normalizeHomogeneous(Mat& matrix) {
-        /* Normalises the last value of the vector to 1 */
-        if (matrix.at<float>(3, 0) != 0)
-        {
-            matrix.at<float>(0, 0) = matrix.at<float>(0, 0) / matrix.at<float>(3, 0);
-            matrix.at<float>(1, 0) = matrix.at<float>(1, 0) / matrix.at<float>(3, 0);
-            matrix.at<float>(2, 0) = matrix.at<float>(2,0) / matrix.at<float>(3,0);
-            matrix.at<float>(3, 0) = 1.0;
-        }
+        matrix.at<float>(0, 0) = matrix.at<float>(0, 0) / matrix.at<float>(3, 0);
+        matrix.at<float>(1, 0) = matrix.at<float>(1, 0) / matrix.at<float>(3, 0);
+        matrix.at<float>(2, 0) = matrix.at<float>(2, 0) / matrix.at<float>(3, 0);
+        matrix.at<float>(3, 0) = 1.0;
     }
     
     Point3f differenceCartesian(Mat& m1, Mat& m2);
-    
-    vector<float> filterSpeeds(vector<float> euclideanNorms, float epsilon, float threshold);
+    vector<float> filterSpeeds(vector<float> euclideanNorms, float epsilon);
     
 public:
     
@@ -87,12 +79,8 @@ public:
 
 	ImageQuad BackgroundSubtraction(Image<uchar> L0, Image<uchar>R0, Image<uchar>L1, Image<uchar>R1);
 	Mat BackgroundSubtraction_image(Image<uchar> image1, Image<uchar>image2);
-
-	float filterSpeeds(vector<float> euclideanNorms);
-
-
     
-    static inline float median(vector<float>& vals) {
+    static inline float median(vector<float> vals) {
         float median;
         sort(vals.begin(), vals.end());
         if (vals.size() % 2 == 0 && vals.size() > 0) {
@@ -101,6 +89,15 @@ public:
             median = vals[(vals.size() - 1) / 2];
         }
         return median;
+    }
+    
+    static inline vector<float> medianAbsoluteDeviations(vector<float>& speeds, float epsilon) {
+        float median = SpeedExtractor::median(speeds);
+        vector<float> MAD;
+        for (size_t i = 0; i < speeds.size(); i++) {
+            MAD.push_back(abs(speeds[i] - median));
+        }
+        return MAD;
     }
     
 };
