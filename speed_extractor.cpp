@@ -140,7 +140,7 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
     this->filterMatches(matchesL, matchesR, matches0, matches1, filteredMatches);
     
     // Get euclidean difference for all filtered matches using
-    // OpenCV triangulation
+    // OpenCV triangulation see https://docs.opencv.org/3.2.0/d0/dbd/group__triangulation.html for detailed information
     vector<float> euclideanNorms;
     for (auto filteredMatch : filteredMatches) {
         Mat pointL0(filteredMatch.first.queryPoint);
