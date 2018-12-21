@@ -14,7 +14,7 @@ Mat SpeedExtractor::BackgroundSubtraction_image(Image<uchar> image1, Image<uchar
 	Ptr<BackgroundSubtractor> pMOG2; //MOG2 Background subtractor
 	
 	int n_erode_dilate = 1; 
-
+	// Ideas taken from https://docs.opencv.org/3.4/db/d5c/tutorial_py_bg_subtraction.html
 	pMOG2 = createBackgroundSubtractorMOG2(10); //MOG2 
 
 	pMOG2->apply(image1, fgMaskMOG2, 1);
