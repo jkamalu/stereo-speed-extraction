@@ -99,7 +99,7 @@ float SpeedExtractor::estimateSpeed(string l0, string r0, string l1, string r1, 
     return this->estimateSpeed(imageQuad, timeDelta);
 }
 
-// taken from here https://stackoverflow.com/a/45399188
+// idea taken from here https://stackoverflow.com/a/45399188
 vector<float> SpeedExtractor::filterSpeeds(vector<float> speeds, float epsilon) {
     vector<float> MAD = SpeedExtractor::medianAbsoluteDeviations(speeds, epsilon);
     float medianMAD = this->median(MAD);
@@ -126,18 +126,22 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
     this->descriptor->detectAndCompute(imageQuad.l1, noArray(), keyPointsL1, descL1);
     this->descriptor->detectAndCompute(imageQuad.r1, noArray(), keyPointsR1, descR1);
     
+    // Keypoint matches
     vector<SpeedExtractor::MatchFilterPair> matchesL, matchesR, matches0, matches1;
-    
+    // Find all keypoint matches
     this->findDumbMatches(imageQuad.l0, imageQuad.l1, descL0, descL1, keyPointsL0, keyPointsL1, matchesL, "matchesL.png");
     this->findDumbMatches(imageQuad.r0, imageQuad.r1, descR0, descR1, keyPointsR0, keyPointsR1, matchesR, "matchesR.png");
     this->findDumbMatches(imageQuad.l0, imageQuad.r0, descL0, descR0, keyPointsL0, keyPointsR0, matches0, "matches0.png");
     this->findDumbMatches(imageQuad.l1, imageQuad.r1, descL1, descR1, keyPointsL1, keyPointsR1, matches1, "matches1.png");
     
+    // Filtered matches
     vector<pair<SpeedExtractor::MatchFilterPair, SpeedExtractor::MatchFilterPair> > filteredMatches;
+    // Filter all keypoint matches
     this->filterMatches(matchesL, matchesR, matches0, matches1, filteredMatches);
     
+    // Get euclidean difference for all filtered matches using
+    // OpenCV triangulation
     vector<float> euclideanNorms;
-    
     for (auto filteredMatch : filteredMatches) {
         Mat pointL0(filteredMatch.first.queryPoint);
         Mat pointL1(filteredMatch.first.trainPoint);
@@ -153,6 +157,7 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
         euclideanNorms.push_back(norm(difference));
     }
     
+    // filter the zero speeds and handle empty speeds
     float epsilon = 0.001;
     vector<float> speeds;
     if (euclideanNorms.empty()) {
@@ -170,6 +175,7 @@ float SpeedExtractor::estimateSpeed(SpeedExtractor::ImageQuad& imageQuad, int ti
         return -1;
     }
 
+    // MAD filtering on speeds
     vector<float> filteredSpeeds = this->filterSpeeds(speeds, epsilon);
     return SpeedExtractor::median(filteredSpeeds);
     
